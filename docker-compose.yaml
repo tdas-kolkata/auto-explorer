@@ -31,7 +31,6 @@ services:
       DOCKER_HOST: tcp://nanobot-proxy:2375
     volumes:
       - .nanobot:/root/.nanobot
-      - skills:/root/.nanobot/workspace/skills
     ports:
       - "18790:18790"
     networks:
