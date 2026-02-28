@@ -1,0 +1,42 @@
+services:
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: nanobot-proxy
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Proxy gets the socket
+    environment:
+      - CONTAINERS=1
+      - IMAGES=1
+      - NETWORKS=1
+      - STATS=1
+      - POST=1      # CRITICAL: Prevent Nanobot from launching new containers
+      - PROXY_READ_TIMEOUT=3600  # 1 hour instead of infinity
+      - PROXY_CONNECT_TIMEOUT=10
+      - PROXY_SERVER_TIMEOUT=3600
+    networks:
+      - nanobot_internal
+
+  nanobot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nanobot_assistant
+    restart: unless-stopped
+    # The 'gateway' command keeps the bot running for chat apps
+    entrypoint: ["nanobot","gateway"]
+    environment:
+      TZ: Asia/Kolkata
+      LOG_LEVEL: DEBUG
+      DOCKER_HOST: tcp://nanobot-proxy:2375
+    volumes:
+      - .nanobot:/root/.nanobot
+      - skills:/root/.nanobot/workspace/skills
+    ports:
+      - "18790:18790"
+    networks:
+      - nanobot_internal
+
+
+networks:
+  nanobot_internal:
